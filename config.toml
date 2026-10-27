@@ -4,8 +4,8 @@
 
 [espn]
 # League: OC Ballers
-league_id = 0        # REQUIRED: from your league URL: ...?leagueId=123456
-team_name = "Brad's Best Team"   # or set team_id = <number> from ...&teamId=
+league_id = 1954759804
+team_id   = 3          # Brad's Best Team
 year      = 2027     # ESPN names seasons by the year they end: 2026-27 = 2027
 
 [lineup]
