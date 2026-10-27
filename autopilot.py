@@ -486,6 +486,16 @@ def run(cfg: dict, live: bool) -> None:
     else:
         print("No changes needed.")
 
+    playing = sum(1 for p in roster if p.game_ms is not None)
+    annotate("notice", f"{mode}: {espn.team.team_name}, {len(roster)} players, {playing} play today. "
+             + (" | ".join(report) if report else "No changes needed."))
+
+
+def annotate(level: str, msg: str) -> None:
+    """Surface a one-line result on the GitHub Actions run page."""
+    if os.environ.get("GITHUB_ACTIONS"):
+        print(f"::{level}::{msg.replace(chr(10), ' | ')}")
+
 
 def load_config(path: Path) -> dict:
     with open(path, "rb") as f:
@@ -507,17 +517,24 @@ def main() -> None:
     ap.add_argument("--config", default="config.toml", type=Path)
     ap.add_argument("--live", action="store_true", help="actually submit moves (default is a dry run)")
     args = ap.parse_args()
-    cfg = load_config(args.config)
+    try:
+        cfg = load_config(args.config)
+    except SystemExit as exc:
+        annotate("error", str(exc))
+        raise
     live = args.live or os.environ.get("AUTOPILOT_LIVE") == "1"
     try:
         run(cfg, live)
-    except SystemExit:
+    except SystemExit as exc:
+        annotate("error", str(exc))
         raise
     except Exception as exc:
         hint = ""
         if "Access" in type(exc).__name__ or "401" in str(exc):
             hint = " Your ESPN cookies have probably expired; refresh ESPN_S2 and ESPN_SWID."
-        notify(cfg, "Fantasy autopilot error", [f"{type(exc).__name__}: {exc}.{hint}"], urgent=True)
+        msg = f"{type(exc).__name__}: {exc}.{hint}"
+        annotate("error", msg)
+        notify(cfg, "Fantasy autopilot error", [msg], urgent=True)
         sys.exit(1)
 
 
