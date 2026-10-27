@@ -183,7 +183,7 @@ def plan_lineup(roster: list[P], slot_counts: dict[int, int], now_ms: int, lcfg:
 # Free-agent decisions
 # ---------------------------------------------------------------------------
 def _norm(name: str) -> str:
-    return " ".join(name.lower().replace(".", "").split())
+    return " ".join(name.lower().replace(".", "").replace("’", "'").split())
 
 
 def plan_pickup(
@@ -248,7 +248,8 @@ class ESPN:
 
         e = cfg["espn"]
         self.league_id = int(e["league_id"])
-        self.team_id = int(e["team_id"])
+        self.team_id = int(e["team_id"]) if e.get("team_id") else None
+        self.team_name = e.get("team_name", "")
         self.year = int(e["year"])
         self.s2 = os.environ.get("ESPN_S2") or e.get("espn_s2", "")
         self.swid = os.environ.get("ESPN_SWID") or e.get("swid", "")
@@ -263,6 +264,13 @@ class ESPN:
     def load(self) -> None:
         self.league = self.League(self.league_id, self.year, espn_s2=self.s2, swid=self.swid)
         self.sp = self.league.scoringPeriodId
+        if self.team_id is None:
+            matches = [t for t in self.league.teams if _norm(t.team_name) == _norm(self.team_name)]
+            if len(matches) != 1:
+                names = ", ".join(t.team_name for t in self.league.teams)
+                raise SystemExit(f"Couldn't find team '{self.team_name}'. Teams in this league: {names}")
+            self.team_id = matches[0].team_id
+            print(f"Found '{matches[0].team_name}' (team_id {self.team_id})")
         self.team = self.league.get_team_data(self.team_id)
         if self.team is None:
             raise SystemExit(f"team_id {self.team_id} not found in league {self.league_id}")
@@ -485,9 +493,12 @@ def load_config(path: Path) -> dict:
     cfg = {k: dict(v) for k, v in DEFAULTS.items()}
     for section, values in user.items():
         cfg.setdefault(section, {}).update(values)
-    for key in ("league_id", "team_id", "year"):
-        if key not in cfg.get("espn", {}):
+    e = cfg.get("espn", {})
+    for key in ("league_id", "year"):
+        if not e.get(key):
             raise SystemExit(f"config: [espn] {key} is required")
+    if not e.get("team_id") and not e.get("team_name"):
+        raise SystemExit("config: [espn] needs team_name or team_id")
     return cfg
 
 

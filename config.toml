@@ -3,8 +3,9 @@
 # (or GitHub secrets): ESPN_S2 and ESPN_SWID. See README.md.
 
 [espn]
-league_id = 123456   # from your league URL: ...?leagueId=123456
-team_id   = 1        # from your team page URL: ...&teamId=1
+# League: OC Ballers
+league_id = 0        # REQUIRED: from your league URL: ...?leagueId=123456
+team_name = "Brad's Best Team"   # or set team_id = <number> from ...&teamId=
 year      = 2027     # ESPN names seasons by the year they end: 2026-27 = 2027
 
 [lineup]

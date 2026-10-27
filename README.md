@@ -19,7 +19,7 @@ On a computer, log in at fantasy.espn.com, open your league, then open developer
 These act like your password. Never put them in a file you commit. They last a few months; the tool alerts you when they expire.
 
 ### 2. Fill in `config.toml`
-- `league_id` and `team_id` from your team page URL (`...?leagueId=123456&teamId=4`).
+- `league_id` from your league URL (`...?leagueId=123456`). Your team is found by `team_name`, or you can set `team_id` instead.
 - `year = 2027` for the 2026–27 season.
 - Under `[waivers]`, list the players you're happy to drop in `droppable`. **The tool never drops anyone not on that list.** Leave it empty to only ever add into an open roster spot.
 
