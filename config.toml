@@ -1,0 +1,52 @@
+# ESPN Fantasy Basketball autopilot settings.
+# Your ESPN cookies do NOT go in this file. Set them as environment variables
+# (or GitHub secrets): ESPN_S2 and ESPN_SWID. See README.md.
+
+[espn]
+league_id = 123456   # from your league URL: ...?leagueId=123456
+team_id   = 1        # from your team page URL: ...&teamId=1
+year      = 2027     # ESPN names seasons by the year they end: 2026-27 = 2027
+
+[lineup]
+enabled = true
+# "optimize": start the highest-value players with games today every run.
+# "injuries_only": leave your healthy starters alone; only bench players who
+#                  are ruled out and fill slots with bench players who play.
+strategy = "optimize"
+# Starters with any of these ESPN statuses get benched. Add "DAY_TO_DAY" to
+# also bench questionable players (usually too aggressive).
+bench_statuses = ["OUT", "SUSPENSION", "INJURY_RESERVE"]
+# Don't try to move anyone whose game starts within this many minutes.
+lock_buffer_minutes = 5
+
+[value]
+# How players are ranked: "season" average, ESPN "projected" average, or a
+# 50/50 "blend". Category leagues fall back to a points-style formula.
+source = "blend"
+
+[waivers]
+enabled = true
+# "stream": when a starting slot would sit empty tonight, add the best
+#           free agent who plays today.
+# "upgrade": add any free agent who beats your worst droppable player by
+#            at least min_upgrade, game today or not.
+mode = "stream"
+# The tool will ONLY ever drop players named here. Leave empty to never drop
+# (it will still add players if you have an open roster spot).
+droppable = [
+  # "Player Name",
+  # "Another Player",
+]
+# Free agent must beat the dropped player's value by this much (fantasy
+# points per game). Use a negative number for pure streaming.
+min_upgrade = 0.0
+max_adds_per_week = 4        # rolling 7 days, counted from ESPN's activity log
+claim_waivers = false        # upgrade mode only: put in claims on players on waivers
+faab_bid = 0                 # bid for those claims, if your league uses FAAB
+pool_size = 100              # how many top free agents to consider
+
+[notify]
+# Push alerts via ntfy.sh (free app, no account). Pick a hard-to-guess topic
+# name, subscribe to it in the ntfy app, and put it here or in NTFY_TOPIC.
+ntfy_topic = ""
+notify_on_no_changes = false
