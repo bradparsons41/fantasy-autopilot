@@ -255,6 +255,9 @@ class ESPN:
         self.swid = os.environ.get("ESPN_SWID") or e.get("swid", "")
         if not self.s2 or not self.swid:
             raise SystemExit("Missing ESPN_S2 / ESPN_SWID (see README).")
+        problems = check_cookies(self.s2, self.swid)
+        if problems:
+            raise SystemExit("Cookie secrets look wrong: " + " ".join(problems))
         if not self.swid.startswith("{"):
             self.swid = "{" + self.swid.strip("{}") + "}"
         self.League = League
@@ -375,6 +378,24 @@ class ESPN:
         if r.status_code >= 400:
             raise RuntimeError(f"ESPN rejected the transaction ({r.status_code}): {r.text[:300]}")
         return r.json() if r.content else {}
+
+
+def check_cookies(s2: str, swid: str) -> list[str]:
+    """Describe obvious problems with the cookie values without revealing them."""
+    import re
+
+    out = []
+    s2, swid = s2.strip(), swid.strip()
+    if s2.upper().startswith("ESPN") or "_S2" in s2.upper():
+        out.append("The espn_s2 secret contains a name, not the cookie value.")
+    elif len(s2) < 100:
+        out.append(f"The espn_s2 secret is only {len(s2)} characters; the real cookie is usually 200-400.")
+    elif s2.startswith(("espn_s2", "\"")) or ";" in s2 or " " in s2:
+        out.append("The espn_s2 secret has extra text; paste only the Value column.")
+    if not re.fullmatch(r"\{?[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\}?", swid):
+        out.append(f"The SWID secret ({len(swid)} characters) isn't in the form "
+                   "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}.")
+    return out
 
 
 def player_value(pl, vcfg: dict) -> float:
